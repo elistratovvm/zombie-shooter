@@ -5,11 +5,13 @@ using UnityEngine.AI;
 
 public class Player : MonoBehaviour
 {
-    NavMeshAgent navMeshAgent; 
+    NavMeshAgent navMeshAgent;
+    Animator animator;
     Cursor cursor;
     Shot shot;
     public float moveSpeed;
     public Transform gunBarrel;
+    bool shoot;
 
     // Start is called before the first frame update
     void Start()
@@ -19,6 +21,7 @@ public class Player : MonoBehaviour
         shot = FindObjectOfType<Shot>();
 
         navMeshAgent.updateRotation = false;
+        animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -28,6 +31,12 @@ public class Player : MonoBehaviour
         Vector3 forward = cursor.transform.position - transform.position;
         transform.rotation = Quaternion.LookRotation(new Vector3(forward.x, 0, forward.z));
 
+        if (shoot)
+        {
+            shoot = false;
+            animator.SetBool("shoot", false);
+        }
+        
         if (Input.GetKey(KeyCode.LeftArrow))
         {
             dir.z = -1.0f;
@@ -45,10 +54,19 @@ public class Player : MonoBehaviour
             dir.x = 1.0f;
         }
 
-        navMeshAgent.velocity = dir.normalized * moveSpeed;
+        if (animator.GetCurrentAnimatorStateInfo(0).IsName("m_pistol_shoot"))
+        {
+            navMeshAgent.velocity = Vector3.zero;
+        }
+        else
+        {
+            navMeshAgent.velocity = dir.normalized * moveSpeed;
+        }
 
         if (Input.GetMouseButtonDown(0))
         {
+            shoot = true;
+            animator.SetBool("shoot", true);
             var from = gunBarrel.position;
             var target = cursor.transform.position;
             var to = new Vector3(target.x, from.y, target.z);
